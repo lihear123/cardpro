@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Student Card Generator — Kalinga Institute</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        :root {
+            --card-w: 280px;
+            --card-h: 470px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f3f6fb;
+            color: #111;
+        }
+
+        .wrap {
+            width: 1000px;
+            margin: 16px auto;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 18px;
+        }
+
+        /* FORM */
+        form.card-form {
+            width: 500px;
+            background: #fff;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(12, 20, 40, 0.08);
+        }
+
+        form .row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        label {
+            font-size: 13px;
+            color: #334155;
+            width: 110px;
+            padding-top: 6px;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        select {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #e6eef8;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #e6eef8;
+            border-radius: 8px;
+            font-size: 14px;
+            min-height: 100px;
+        }
+        
+
+        /* PREVIEW / CARD */
+        .preview-area {
+            margin-left: 150px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-stage {
+            display: flex;
+            gap: 12px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .card {
+            width: var(--card-w);
+            min-height: var(--card-h);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 8px 24px rgba(13, 38, 76, 0.09);
+            position: relative;
+            border: 1px solid #e6eef8;
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow: hidden;
+        }
+
+        .card-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            border-radius: 12px;
+        }
+
+        .content-overlay {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .flag {
+            position: absolute;
+            width: 46px;
+            height: 28px;
+            top: 8px;
+            z-index: 2;
+        }
+
+        .flag.left {
+            left: 8px;
+        }
+
+        .flag.right {
+            right: 8px;
+        }
+
+        .school {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 6px;
+            text-align: center;
+            z-index: 2;
+        }
+
+        .logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            background: #e6eef8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .school h1 {
+            font-size: 12px;
+            margin: 0;
+            line-height: 1.05;
+        }
+
+        .school p {
+            font-size: 11px;
+            margin: 0;
+            color: #334155;
+        }
+
+        .info {
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            width: 100%;
+            z-index: 2;
+        }
+        
+        .details {
+            text-align: left;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .details b {
+            display: block;
+            font-size: 15px;
+            margin-bottom: 8px;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .details span {
+            display: block;
+            font-size: 13px;
+            color: #475569;
+            margin-top: 4px;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+        
+        .photo {
+            width: 120px;
+            height: 160px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid #dbeafe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        .photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .meta {
+            position: absolute;
+            bottom: 1px;
+            left: 50%;
+            transform: translateX(-10%);
+            font-size: 11px;
+            color: #475569;
+            z-index: 2;
+        }
+
+        /* Message box */
+        #messageBox {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background-color: #f87171;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        #messageBox.show {
+            opacity: 1;
+        }
+
+        /* Small button style */
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        /* printable larger */
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .wrap > *:not(.preview-area) {
+                display: none;
+            }
+
+            .card {
+                transform: scale(1.4);
+                transform-origin: 0 0;
+            }
+        }
+    </style>
+
+
+choose file
+</head>
+<body>
+    <div class="wrap">
+        <form class="card-form" id="form">
+            <div class="row">
+                <label>Full name</label>
+                <input id="fullname" type="text" placeholder="Enter full name exactly" required />
+            </div>
+            <div class="row">
+                <label>Student ID</label>
+                <input id="studentid" type="text" placeholder="e.g. KIIT2025xxx" />
+            </div>
+            <div class="row">
+                <label>Program / Course</label>
+                <input id="course" type="text" placeholder="B.Tech — Computer Science" />
+            </div>
+            <div class="row">
+                <label>Semester</label>
+                <input id="semester" type="text" placeholder="e.g. 5th Semester" />
+            </div>
+            <div class="row">
+                <label>Valid date</label>
+                <input id="validdate" type="text" placeholder="auto set" readonly />
+            </div>
+            <div class="row">
+                <label>School logo</label>
+                <input id="logo" type="file" accept="image/*" title="Upload school logo" />
+            </div>
+            <div class="row">
+                <label>Student Photo</label>
+                <input id="photo" type="file" accept="image/*" title="Upload student photo" />
+            </div>
+            <div class="row">
+                <label>Background Style</label>
+                <select id="backgroundStyle" class="flex-1 p-2 border rounded-lg text-sm">
+                    <option value="default">Default</option>
+                    <option value="gradient">Gradient</option>
+                    <option value="geometric">Geometric Shapes</option>
+                    <option value="abstract">Abstract Patterns</option>
+                    <option value="minimal">Minimal Dots</option>
+                </select>
+            </div>
+
+            <div class="actions mt-4 flex gap-1">
+                <button type="button" id="generate" class="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-300 transition">
+                    Generate
+                </button>
+                <button type="button" id="generateBackground" class="bg-purple-600 text-white rounded-lg px-4 py-2 hover:bg-purple-300 transition">
+                    Background
+                </button>
+                <button type="button" id="updateCard" class="bg-amber-600 text-white btn-small hover:bg-amber-300 transition">
+                    Update
+                </button>
+                <button type="button" id="downloadPng" class="bg-emerald-600 text-white rounded-lg px-4 py-2 hover:bg-emerald-300 transition">
+                    Download
+                </button>
+            </div>
+        </form>
+
+        <div class="preview-area">
+            <h3 class="text-lg font-semibold mb-4">Preview</h3>
+            <div class="card-stage">
+                <div id="card" class="card" role="img" aria-label="Student card preview">
+                    <div id="cardBackground" class="card-background">
+                        <!-- Background will be generated here -->
+                    </div>
+                    <div class="content-overlay">
+                        <!-- left flag -->
+                        <div class="flag left" id="flagLeft">
+                            <!-- India flag SVG -->
+                            <svg viewBox="0 0 900 600" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: 100%">
+                                <rect width="900" height="200" fill="#ff9933"></rect>
+                                <rect y="200" width="900" height="200" fill="#fff"></rect>
+                                <rect y="400" width="900" height="200" fill="#138808"></rect>
+                                <g transform="translate(450,300) scale(0.12)">
+                                    <circle r="450" fill="none" stroke="#000088" stroke-width="40" stroke-linejoin="round">
+                                    </circle>
+                                    <circle r="350" fill="none" stroke="#000088" stroke-width="40" stroke-linejoin="round"></circle>
+                                    <g>
+                                        <path d="M450,0 C201.5,0 0,201.5 0,450" fill="none" stroke="#000088" stroke-width="40" stroke-linejoin="round"></path>
+                                        <path d="M450,0 C201.5,0 0,201.5 0,450" fill="none" stroke="#000088" stroke-width="40" stroke-linejoin="round" transform="rotate(120,450,450)"></path>
+                                        <path d="M450,0 C201.5,0 0,201.5 0,450" fill="none" stroke="#000088" stroke-width="40" stroke-linejoin="round" transform="rotate(240,450,450)"></path>
+                                    </g>
+                                </g>
+                            </svg>
+                        </div>
+                        <div class="school">
+                            <div class="logo" id="logoPreview">
+                                <div class="text-sm font-semibold text-slate-700 text-center p-2">
+                                    KIIT<br />LOGO
+                                </div>
+                            </div>
+                            <div>
+                                <h1 class="text-xs font-bold text-slate-800 leading-tight">KALINGA INSTITUTE OF INDUSTRIAL TECHNOLOGY</h1>
+                                <p class="text-xs text-slate-600">(Deemed to be University) — Bhubaneswar, Odisha, India</p>
+                            </div>
+                        </div>
+
+                        <div class="info">
+                            <div class="photo" id="photoPreview">
+                                <div class="text-sm text-slate-500 text-center p-2">
+                                    Student<br />Photo
+                                </div>
+                            </div>
+                            <div class="details">
+                                <b id="namePreview">FULL NAME</b>
+                                <span id="idPreview">ID: —</span>
+                                <span id="coursePreview">Program: —</span>
+                                <span id="semPreview">Semester: —</span>
+                            </div>
+                        </div>
+
+                        <div class="meta">Valid until: <span id="validPreview"></span></div>
+                        <!-- right flag -->
+                        <div class="flag right" id="flagRight">
+                            <!-- India flag SVG -->
+                            <svg viewBox="0 0 900 600" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: 100%">
+                                <rect width="900" height="200" fill="#ff9933"></rect>
+                                <rect y="200" width="900" height="200" fill="#fff"></rect>
+                                <rect y="400" width="900" height="200" fill="#138808"></rect>
+                                <g transform="translate(450,300) scale(0.12)">
+                                    <circle r="450" fill="none" stroke="#000088" stroke-width="40" stroke-linejoin="round">
+                                    </circle>
+                                    <circle r="350" fill="none" stroke="#000088" stroke-width="40" stroke-linejoin="round"></circle>
+                                    <g>
+                                        <path d="M450,0 C201.5,0 0,201.5 0,450" fill="none" stroke="#000088" stroke-width="40" stroke-linejoin="round"></path>
+                                        <path d="M450,0 C201.5,0 0,201.5 0,450" fill="none" stroke="#000088" stroke-width="40" stroke-linejoin="round" transform="rotate(120,450,450)"></path>
+                                        <path d="M450,0 C201.5,0 0,201.5 0,450" fill="none" stroke="#000088" stroke-width="40" stroke-linejoin="round" transform="rotate(240,450,450)"></path>
+                                    </g>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="messageBox" role="alert"></div>
+
+    <script>
+        const el = (id) => document.getElementById(id);
+        const today = new Date();
+        const twoMonths = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000);
+
+        function showMessage(text, isError = true) {
+            const messageBox = el("messageBox");
+            messageBox.textContent = text;
+            messageBox.className = "show";
+            messageBox.style.backgroundColor = isError ? '#ef4444' : '#22c55e';
+            setTimeout(() => {
+                messageBox.className = "";
+            }, 3000);
+        }
+
+        function formatDate(d) {
+            const y = d.getFullYear(),
+                m = String(d.getMonth() + 1).padStart(2, "0"),
+                day = String(d.getDate()).padStart(2, "0");
+            return `${day}-${m}-${y}`;
+        }
+        el("validdate").value = formatDate(twoMonths);
+        el("validPreview").textContent = el("validdate").value;
+
+        // Define arrays for random student generation
+        const names = [
+            "ARJUN", "PRIYA", "ROHAN", "ISHA", "AMIT", "ANJALI", "RAHUL", "NEHA", "SACHIN", "POOJA",
+            "VIKAS", "SHWETA", "MANISH", "KAJAL", "DINESH", "REKHA", "MOHAN", "NIDHI", "SANJAY", "RUCHI",
+            "GAUTAM", "DIYA", "HARSH", "JAYA", "ADITYA", "RITU", "ALOK", "SONAM", "PRADEEP", "SUMAN",
+            "TANVI", "KARAN", "MEENA", "VIVEK", "SNEHA", "RAJAT", "KIRAN", "YASH", "DIVYA", "NAVEEN",
+            "TANYA", "SUMIT", "RASHMI", "KUNAL", "SANA", "VISHAL", "SUNITA", "ANUJ", "KOMAL", "RAJESH",
+            "JYOTI", "NITIN", "MONIKA", "RAVI", "SUNITA", "DEEPAK", "KAVITA", "ASHISH", "MADHU", "SAGAR",
+            "RACHNA", "NIKHIL", "HEMA", "RAJEEV", "SANDHYA", "ANKIT", "SUSHMA", "PANKAJ", "KUSUM", "RAJ",
+            "RINA", "LOKESH", "SANGEETA", "VIMAL", "HEMA", "RAMESH", "KANCHAN", "PRAVEEN", "LATA", "SHIVAM",
+            "SEEMA", "ANAND", "HEMA", "SUDHIR", "KUSUM", "VANDANA", "RAJIV", "SUNITA", "RUPESH", "KIRTI",
+            "JITENDRA", "SUNITA", "RUPALI", "RAJENDRA", "KUSUM", "VANDANA", "RANJEET", "RISHABH", "PRIYANKA", "TARUN",
+            "DEEPTI", "MANOJ", "SAMEER", "KALPANA", "VARSHA", "NARENDRA", "SHEETAL", "VIKRAM", "GEETA", "AMRITA",
+            "SHIVANI", "PRANAV", "MEGHNA", "TUSHAR", "KARTIK", "SHILPA", "NISHA", "RAJIV", "VIBHA", "ANURAG",
+            "SURAJ", "KANCHAN", "RUPESH", "KIRTI", "RAGHAV", "SANDHYA", "PRACHI", "YOGESH", "KAVYA", "HARSHITA",
+            "ABHISHEK", "AARTI", "AKASH", "AKSHAY", "ALISHA", "AMAR", "AMITABH", "ANANYA", "ANIL", "ANKITA"
+        ];
+        
+        const surnames = [
+            "SHARMA", "VERMA", "SINGH", "GUPTA", "KUMAR", "PANDIT", "DESAI", "JOSHI", "YADAV", "MEHROTRA",
+            "PATEL", "REDDY", "KHAN", "SHAH", "CHANDRA", "DWIVEDI", "KAPOOR", "RAO", "SENGUPTA", "MAHAPATRA",
+            "AGARWAL", "AHUJA", "BAJAJ", "BAKSHI", "BANERJEE", "BANSAL", "BARUA", "BASU", "BEDI", "BHADURI",
+            "BHAGAT", "BHALLA", "BHANDARI", "BHATT", "BHATTACHARYA", "BISHT", "BOSE", "CHAKRABORTY", "CHAKRAVARTY", "CHAND",
+            "CHATTERJEE", "CHAUHAN", "CHAWLA", "CHOPRA", "DAS", "DASGUPTA", "DATTA", "DE", "DEBNATH", "DESHMUKH",
+            "DUBEY", "DUTTA", "GANDHI", "GANGULY", "GARG", "GHOSE", "GILL", "GOEL", "GOSWAMI", "GUPTE",
+            "HANDA", "HARIDAS", "HOSSAIN", "IYER", "JAIN", "JAISWAL", "JHA", "JOSHI", "KACHHWAHA", "KALE",
+            "KAMATH", "KASHYAP", "KAUL", "KHANNA", "KHARE", "KHATRI", "KOCHHAR", "KOHLI", "KULKARNI", "KUMAR",
+            "LAKHANI", "LAL", "MAHAJAN", "MAHESHWARI", "MALHOTRA", "MALLICK", "MANI", "MATHUR", "MEHRA", "MENON",
+            "MITRA", "MUKHERJEE", "MUKHOPADHYAY", "MULLICK", "MURTHY", "NAGAR", "NAIR", "NAKRA", "NAMBIAR", "NANDA",
+            "NARANG", "NARAYAN", "NATH", "NAYAK", "NAYYAR", "NIGAM", "NIMKAR", "OZA", "PAL", "PANDA"
+        ];
+        
+        const courses = [
+            "B.Tech — Computer Science", "B.Tech — Electronics & Communication", "B.Tech — Civil Engineering",
+            "B.Tech — Mechanical Engineering", "B.Tech — Electrical Engineering", "B.Arch — Architecture",
+            "B.Sc — Biotechnology", "M.Tech — Data Science", "MBA — Finance", "MBA — Marketing"
+        ];
+        
+        const semesters = [
+            "1st Semester", "2nd Semester", "3rd Semester", "4th Semester", "5th Semester",
+            "6th Semester", "7th Semester", "8th Semester"
+        ];
+
+        // Function to generate a random student
+        function generateRandomStudent() {
+            const randomName = names[Math.floor(Math.random() * names.length)];
+            const randomSurname = surnames[Math.floor(Math.random() * surnames.length)];
+            const randomCourse = courses[Math.floor(Math.random() * courses.length)];
+            const randomSemester = semesters[Math.floor(Math.random() * semesters.length)];
+            
+            // Generate a random student ID
+            const randomId = `KIIT${2025}${Math.floor(1000 + Math.random() * 9000)}`;
+            
+            return {
+                name: `${randomName} ${randomSurname}`,
+                id: randomId,
+                course: randomCourse,
+                semester: randomSemester
+            };
+        }
+
+        // Function to generate random background
+        function generateBackground() {
+            const style = el("backgroundStyle").value;
+            const bgContainer = el("cardBackground");
+            bgContainer.innerHTML = "";
+            
+            // Get random colors
+            const getRandomColor = () => {
+                const colors = [
+                    "#f0f9ff", "#ecfeff", "#f0fdf4", "#fefce8", "#fffbeb", 
+                    "#fdf4ff", "#fff1f2", "#e0f2fe", "#bae6fd", "#dcfce7",
+                    "#fef9c3", "#fef3c7", "#f5d0fe", "#ffe4e6", "#f3e8ff"
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            };
+            
+            const getSecondaryColor = () => {
+                const colors = [
+                    "#0ea5e9", "#06b6d4", "#22c55e", "#eab308", "#f59e0b",
+                    "#8b5cf6", "#ef4444", "#f97316", "#84cc16", "#059669"
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            };
+            
+            const primaryColor = getRandomColor();
+            const secondaryColor = getSecondaryColor();
+            
+            switch(style) {
+                case "default":
+                    bgContainer.style.background = "#ffffff";
+                    break;
+                // case "default":
+                //         // Add more single color options
+                //         const singleColors = [
+                //             "#f0f9ff", "#ecfeff", "#f0fdf4", "#fefce8", "#fffbeb", "#fdf4ff", "#fff1f2", "#e0f2fe",
+                //             "#bae6fd", "#dcfce7", "#fef9c3", "#fef3c7", "#f5d0fe", "#ffe4e6", "#f3e8ff",
+                //             "#e0e7ff", "#f1f5f9", "#f3f4f6", "#fef2f2", "#f1f5f9", "#e7e5e4", "#f9fafb",
+                //             "#e0f2f1", "#e8f5e9", "#fffde7", "#fff3e0", "#fce4ec", "#ede7f6", "#e3f2fd"
+                //         ];
+                //         const color = singleColors[Math.floor(Math.random() * singleColors.length)];
+                //         bgContainer.style.background = color;
+                //         break;
+                case "gradient":
+                    const directions = ["to top", "to right", "to bottom", "to left", "to top right", "to bottom right"];
+                    const direction = directions[Math.floor(Math.random() * directions.length)];
+                    bgContainer.style.background = `linear-gradient(${direction}, ${primaryColor}, ${secondaryColor})`;
+                    break;
+                    
+                case "geometric":
+                    bgContainer.style.background = primaryColor;
+                    
+                    // Create SVG with geometric shapes
+                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    svg.setAttribute("width", "100%");
+                    svg.setAttribute("height", "100%");
+                    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+                    
+                    // Add some random geometric shapes
+                    for(let i = 0; i < 5; i++) {
+                        const shapeType = Math.floor(Math.random() * 3);
+                        const size = 30 + Math.random() * 50;
+                        const x = Math.random() * 100;
+                        const y = Math.random() * 100;
+                        const opacity = 0.1 + Math.random() * 0.3;
+                        
+                        if(shapeType === 0) {
+                            // Circle
+                            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                            circle.setAttribute("cx", `${x}%`);
+                            circle.setAttribute("cy", `${y}%`);
+                            circle.setAttribute("r", size);
+                            circle.setAttribute("fill", secondaryColor);
+                            circle.setAttribute("opacity", opacity);
+                            svg.appendChild(circle);
+                        } else if(shapeType === 1) {
+                            // Rectangle
+                            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                            rect.setAttribute("x", `${x}%`);
+                            rect.setAttribute("y", `${y}%`);
+                            rect.setAttribute("width", size);
+                            rect.setAttribute("height", size);
+                            rect.setAttribute("fill", secondaryColor);
+                            rect.setAttribute("opacity", opacity);
+                            svg.appendChild(rect);
+                        } else {
+                            // Triangle
+                            const points = `${x}% ${y}%, ${x + size/2}% ${y + size}%, ${x - size/2}% ${y + size}%`;
+                            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                            polygon.setAttribute("points", points);
+                            polygon.setAttribute("fill", secondaryColor);
+                            polygon.setAttribute("opacity", opacity);
+                            svg.appendChild(polygon);
+                        }
+                    }
+                    
+                    bgContainer.appendChild(svg);
+                    break;
+                    
+                case "abstract":
+                    bgContainer.style.background = primaryColor;
+                    
+                    // Create canvas for abstract pattern
+                    const canvas = document.createElement("canvas");
+                    canvas.width = 280;
+                    canvas.height = 450;
+                    const ctx = canvas.getContext("2d");
+                    
+                    // Fill background
+                    ctx.fillStyle = primaryColor;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw abstract curves
+                    for(let i = 0; i < 8; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                        
+                        for(let j = 0; j < 3; j++) {
+                            ctx.quadraticCurveTo(
+                                Math.random() * canvas.width, 
+                                Math.random() * canvas.height,
+                                Math.random() * canvas.width, 
+                                Math.random() * canvas.height
+                            );
+                        }
+                        
+                        ctx.strokeStyle = secondaryColor;
+                        ctx.lineWidth = 2 + Math.random() * 3;
+                        ctx.globalAlpha = 0.2 + Math.random() * 0.3;
+                        ctx.stroke();
+                    }
+                    
+                    // Convert canvas to image and set as background
+                    const img = new Image();
+                    img.src = canvas.toDataURL();
+                    img.style.width = "100%";
+                    img.style.height = "100%";
+                    img.style.objectFit = "cover";
+                    bgContainer.appendChild(img);
+                    break;
+                    
+                case "minimal":
+                    bgContainer.style.background = primaryColor;
+                    
+                    // Create minimal dots pattern
+                    const dotSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    dotSvg.setAttribute("width", "100%");
+                    dotSvg.setAttribute("height", "100%");
+                    dotSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+                    
+                    // Add random dots
+                    for(let i = 0; i < 20; i++) {
+                        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        circle.setAttribute("cx", `${Math.random() * 100}%`);
+                        circle.setAttribute("cy", `${Math.random() * 100}%`);
+                        circle.setAttribute("r", 1 + Math.random() * 3);
+                        circle.setAttribute("fill", secondaryColor);
+                        circle.setAttribute("opacity", 0.3 + Math.random() * 0.4);
+                        dotSvg.appendChild(circle);
+                    }
+                    
+                    bgContainer.appendChild(dotSvg);
+                    break;
+            }
+            
+            showMessage("Background generated!", false);
+        }
+
+        // Handle Generate button click
+        el("generate").addEventListener("click", () => {
+            // Generate random student data
+            const student = generateRandomStudent();
+            
+            // Fill the form fields
+            el("fullname").value = student.name;
+            el("studentid").value = student.id;
+            el("course").value = student.course;
+            el("semester").value = student.semester;
+            
+            // Update the card preview
+            updateCardPreview();
+            
+            showMessage("Random student generated!", false);
+        });
+
+        // Handle Generate Background button
+        el("generateBackground").addEventListener("click", () => {
+            generateBackground();
+        });
+
+        // Handle Update Card button
+        el("updateCard").addEventListener("click", () => {
+            updateCardPreview();
+            showMessage("Card updated!", false);
+        });
+
+        // Function to update card preview
+        function updateCardPreview() {
+            const name = el("fullname").value.trim();
+            if (!name) {
+                showMessage("Please enter full name to generate the card.");
+                return;
+            }
+
+            el("namePreview").textContent = name.toUpperCase() || "FULL NAME";
+            el("idPreview").textContent = `ID: ${el("studentid").value || "—"}`;
+            el("coursePreview").textContent = `Program: ${el("course").value || "—"}`;
+            el("semPreview").textContent = `Semester: ${el("semester").value || "—"}`;
+            
+            // Force card to resize if content is long
+            const card = el("card");
+            card.style.height = "auto";
+            setTimeout(() => {
+                card.style.height = "";
+            }, 100);
+        }
+
+        // Handle file uploads
+        function fileToDataUrl(file, cb) {
+            if (!file) return cb(null);
+            const r = new FileReader();
+            r.onload = (e) => cb(e.target.result);
+            r.readAsDataURL(file);
+        }
+
+        el("logo").addEventListener("change", (e) => {
+            const f = e.target.files[0];
+            fileToDataUrl(f, (data) => {
+                if (!data) return;
+                el("logoPreview").innerHTML = `<img src="${data}" alt="School Logo" class="w-full h-full object-cover rounded-lg">`;
+            });
+        });
+
+        el("photo").addEventListener("change", (e) => {
+            const f = e.target.files[0];
+            fileToDataUrl(f, (data) => {
+                if (!data) return;
+                el("photoPreview").innerHTML = `<img src="${data}" alt="Student Photo" class="w-full h-full object-cover rounded-lg">`;
+            });
+        });
+
+        // Fixed Download PNG functionality
+        el("downloadPng").addEventListener("click", () => {
+            const name = el("fullname").value.trim();
+            if (!name) {
+                showMessage("Please enter a full name first.");
+                return;
+            }
+            
+            const card = el("card");
+            const w = card.offsetWidth;
+            const h = card.offsetHeight;
+            
+            // Create a canvas element
+            const canvas = document.createElement('canvas');
+            canvas.width = w * 2; // Double resolution for better quality
+            canvas.height = h * 2;
+            const ctx = canvas.getContext('2d');
+            
+            // Set background to white (in case of transparent elements)
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Use html2canvas approach with SVG foreignObject
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            svg.setAttribute("width", w);
+            svg.setAttribute("height", h);
+            
+            const foreign = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+            foreign.setAttribute("width", "100%");
+            foreign.setAttribute("height", "100%");
+            foreign.setAttribute("requiredFeatures", "http://www.w3.org/TR/SVG11/feature#Extensibility");
+            
+            const wrapper = document.createElement("div");
+            wrapper.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+            wrapper.style.width = w + "px";
+            wrapper.style.height = h + "px";
+            wrapper.style.fontFamily = window.getComputedStyle(document.body).fontFamily;
+            
+            // Clone the card
+            const clonedCard = card.cloneNode(true);
+            wrapper.appendChild(clonedCard);
+            foreign.appendChild(wrapper);
+            svg.appendChild(foreign);
+            
+            // Convert SVG to data URL
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+            const svgUrl = URL.createObjectURL(svgBlob);
+            
+            // Create image from SVG
+            const img = new Image();
+            img.onload = function() {
+                // Draw image to canvas
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                // Create download link
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${name.replace(/\s+/g, "_")}_KIIT_card.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+                
+                URL.revokeObjectURL(svgUrl);
+            };
+            
+            img.onerror = function() {
+                showMessage("Error generating image. Please try again.");
+                URL.revokeObjectURL(svgUrl);
+            };
+            
+            img.src = svgUrl;
+        });
+
+        // Initialize with default background
+        window.addEventListener('load', () => {
+            el("cardBackground").style.background = "#ffffff";
+        });
+    </script>
+</body>
+</html>
